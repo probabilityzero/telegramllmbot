@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Herald Bot Logs</title>
+    <meta http-equiv="refresh" content="3">
+    <style>
+        /* Victorian parchment background + subtle animated texture */
+        :root{
+            --paper-1:#f7efe1;
+            --paper-2:#efe1c6;
+            --ink:#2b2b1f;
+            --accent:#8b5e3c;
+            --muted: rgba(43,43,31,0.6);
+            --panel-bg: rgba(43,43,31,0.04);
+            --panel-border: rgba(43,43,31,0.06);
+            --glass: rgba(255,255,255,0.4);
+        }
+
+        html,body{height:100%;margin:0}
+        body {
+            background:
+                linear-gradient(180deg, var(--paper-1) 0%, var(--paper-2) 60%, #e6d8b8 100%),
+                repeating-linear-gradient(90deg, rgba(0,0,0,0.02) 0 1px, transparent 1px 6px);
+            color: var(--ink);
+            font-family: "Palatino Linotype", "Book Antiqua", Georgia, serif;
+            padding: 28px;
+            -webkit-font-smoothing:antialiased;
+            position:relative;
+            overflow-x:hidden;
+        }
+
+        /* layout: left info + right logs panel */
+        .container{
+            max-width:1100px;
+            margin:0 auto;
+            position:relative;
+            z-index:2;
+            display:flex;
+            flex-direction:column;
+            gap:18px;
+        }
+
+        .main-row{
+            display:flex;
+            gap:20px;
+            align-items:flex-start;
+        }
+
+        .left{
+            flex:1 1 auto;
+            min-width:260px;
+        }
+
+        .right{
+            width:420px;
+            flex:0 0 420px;
+        }
+
+        h1 {
+            color: var(--accent);
+            border-bottom: 1px dashed rgba(139,94,60,0.22);
+            padding-bottom: 10px;
+            margin:0 0 10px 0;
+            font-weight:700;
+            letter-spacing:0.6px;
+            display:flex;
+            align-items:center;
+            gap:12px;
+            transform: translateY(0);
+            animation: headerFloat 6s ease-in-out infinite;
+        }
+        @keyframes headerFloat {
+            0%{ transform: translateY(0) }
+            50%{ transform: translateY(-4px) }
+            100%{ transform: translateY(0) }
+        }
+
+        /* logs panel: rounded, muted background, outline */
+        .logs-panel{
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.03);
+            backdrop-filter: blur(0.2px);
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+        }
+
+        .logs-panel .panel-title{
+            font-family: "Segoe UI", Roboto, system-ui, -apple-system, sans-serif;
+            font-size:13px;
+            color:var(--muted);
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:8px;
+            padding-bottom:6px;
+            border-bottom:1px dashed rgba(0,0,0,0.04);
+            margin-bottom:6px;
+        }
+
+        .logs-list{
+            overflow:auto;
+            max-height: 60vh;
+            padding-right:6px;
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+        }
+
+        /* animated paper grain (subtle) */
+        .grain {
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            background-image:
+                radial-gradient(rgba(0,0,0,0.02) 1px, transparent 1px);
+            background-size:6px 6px;
+            mix-blend-mode:multiply;
+            opacity:0.6;
+            animation: grainMove 12s linear infinite;
+            transform-origin: center;
+        }
+        @keyframes grainMove {
+            0% { transform: translate(0,0) scale(1); opacity:0.55; }
+            50% { transform: translate(10px,-8px) scale(1.02); opacity:0.65; }
+            100% { transform: translate(0,0) scale(1); opacity:0.55; }
+        }
+
+        /* vignette / warm glow */
+        .vignette {
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            background:
+                radial-gradient(60% 40% at 10% 10%, rgba(255,245,230,0.08), transparent 15%),
+                radial-gradient(50% 40% at 90% 90%, rgba(210,180,140,0.04), transparent 25%),
+                linear-gradient(180deg, rgba(255,255,255,0) 0, rgba(0,0,0,0.06) 100%);
+            mix-blend-mode: multiply;
+            animation: vignettePulse 6s ease-in-out infinite;
+        }
+        @keyframes vignettePulse {
+            0%{opacity:0.6}
+            50%{opacity:0.85}
+            100%{opacity:0.6}
+        }
+
+        /* floating ink-stain accents */
+        .inks {
+            position:fixed;
+            left:6%;
+            top:18%;
+            width:640px;
+            height:640px;
+            pointer-events:none;
+            opacity:0.08;
+            background-image:
+                radial-gradient(circle at 15% 20%, rgba(0,0,0,0.25) 0 6px, transparent 8px),
+                radial-gradient(circle at 55% 40%, rgba(0,0,0,0.18) 0 10px, transparent 14px),
+                radial-gradient(circle at 80% 75%, rgba(0,0,0,0.12) 0 12px, transparent 18px);
+            transform: translateZ(0);
+            animation: inksDrift 18s linear infinite, inksFade 10s ease-in-out infinite;
+            filter: blur(0.6px);
+        }
+        @keyframes inksDrift {
+            0%{transform:translate(0,0) scale(1)}
+            50%{transform:translate(-18px,12px) scale(1.02)}
+            100%{transform:translate(0,0) scale(1)}
+        }
+        @keyframes inksFade {
+            0%{opacity:0.06}
+            50%{opacity:0.10}
+            100%{opacity:0.06}
+        }
+
+        /* ornate SVG flourish draw animation */
+        .ornament{ width:56px; height:32px; flex:0 0 auto; opacity:0.95; transform:translateY(2px) }
+        .ornament path {
+            stroke-dasharray: 260;
+            stroke-dashoffset: 260;
+            animation: drawPath 2.6s ease forwards;
+        }
+        @keyframes drawPath {
+            to { stroke-dashoffset: 0; }
+        }
+        .ornament circle { transform-origin:center; animation: pulseDot 2.6s ease-in-out infinite; opacity:0.95 }
+        @keyframes pulseDot {
+            0%{ transform:scale(1); opacity:0.95 }
+            50%{ transform:scale(1.25); opacity:0.8 }
+            100%{ transform:scale(1); opacity:0.95 }
+        }
+
+        p { color: var(--muted); margin:8px 0 18px 0 }
+
+        .log {
+            margin: 0;
+            padding: 10px 12px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+            border-left: 4px solid rgba(139,94,60,0.12);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.03) inset, 0 8px 18px rgba(0,0,0,0.03);
+            border-radius:6px;
+            font-size:13px;
+            line-height:1.28;
+            transform-origin:left center;
+            transition: transform .28s ease, box-shadow .28s ease;
+            opacity:0;
+            animation: logFadeIn .6s ease forwards;
+        }
+        /* staggered fade-in for logs using nth-child from top */
+        .logs-list > .log:nth-child(1){ animation-delay: 0.05s }
+        .logs-list > .log:nth-child(2){ animation-delay: 0.09s }
+        .logs-list > .log:nth-child(3){ animation-delay: 0.13s }
+        .logs-list > .log:nth-child(4){ animation-delay: 0.17s }
+        .logs-list > .log:nth-child(5){ animation-delay: 0.21s }
+
+        @keyframes logFadeIn {
+            from { transform: translateX(-6px) scale(0.998); opacity:0; filter: blur(0.6px) }
+            to   { transform: translateX(0) scale(1); opacity:1; filter: blur(0) }
+        }
+
+        .log:hover {
+            transform: translateX(6px) translateY(-2px) scale(1.002);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        }
+
+        .timestamp {
+            color: rgba(80,70,60,0.78);
+            font-size:11px;
+            display:block;
+            margin-bottom:6px;
+            transform:translateX(-6px);
+            opacity:0;
+            animation: tsSlide .5s ease forwards;
+        }
+        .logs-list > .log:nth-child(1) .timestamp{ animation-delay: 0.09s }
+        .logs-list > .log:nth-child(2) .timestamp{ animation-delay: 0.13s }
+        .logs-list > .log:nth-child(3) .timestamp{ animation-delay: 0.17s }
+        @keyframes tsSlide { to { transform:none; opacity:1 } }
+
+        /* little parchment ribbons drifting in background */
+        .ribbon {
+            position: fixed;
+            right: -160px;
+            top: 14%;
+            width:320px;
+            height:120px;
+            background: linear-gradient(90deg, rgba(220,195,160,0.12), rgba(230,210,180,0.06));
+            transform: rotate(-14deg);
+            pointer-events:none;
+            opacity:0.08;
+            border-radius:6px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.02) inset;
+            animation: ribbonFloat 16s ease-in-out infinite;
+            filter: blur(0.2px);
+        }
+        .ribbon::after{
+            content:"";
+            position:absolute;
+            left:12px; top:10px;
+            width:60%;
+            height:6px;
+            background: linear-gradient(90deg, rgba(139,94,60,0.04), rgba(0,0,0,0.01));
+            transform: rotate(-6deg);
+            border-radius:4px;
+        }
+        @keyframes ribbonFloat {
+            0%{ transform: translateY(0) rotate(-14deg) }
+            50%{ transform: translateY(-12px) rotate(-12deg) }
+            100%{ transform: translateY(0) rotate(-14deg) }
+        }
+
+        footer {
+            color: var(--muted);
+            font-size:12px;
+            margin-top:6px;
+            text-align:right;
+            display:flex;
+            justify-content:space-between;
+            gap:12px;
+            align-items:center;
+        }
+
+        .refresh {
+            font-family: "Courier New", Courier, monospace;
+            font-size:12px;
+            color:var(--muted);
+            background: rgba(255,255,255,0.02);
+            padding:4px 8px;
+            border-radius:6px;
+            border:1px solid rgba(0,0,0,0.03);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset;
+        }
+
+        /* small responsive tweaks */
+        @media (max-width:900px){
+            .main-row{ flex-direction:column-reverse; }
+            .right{ width:100%; flex:0 0 auto; }
+            footer{ flex-direction:column; align-items:flex-start; gap:6px; text-align:left }
+        }
+        @media (max-width:640px){
+            .ornament{ display:none }
+            .ribbon{ display:none }
+            body{ padding:14px }
+        }
+
+        /* custom thin scrollbar for logs */
+        .logs-list::-webkit-scrollbar{ width:10px }
+        .logs-list::-webkit-scrollbar-thumb{ background: rgba(0,0,0,0.06); border-radius:8px }
+    </style>
+</head>
+<body>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="inks" aria-hidden="true"></div>
+    <div class="ribbon" aria-hidden="true"></div>
+
+    <div class="container">
+        <div class="main-row">
+            <div class="left">
+                <h1>
+                    <!-- animated SVG ornament -->
+                    <svg class="ornament" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="g" x1="0" x2="1">
+                                <stop offset="0" stop-color="#8b5e3c" stop-opacity="0.95"/>
+                                <stop offset="1" stop-color="#3b2a20" stop-opacity="0.8"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M5 40 Q40 5 80 40 T195 40" fill="none" stroke="url(#g)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="100" cy="28" r="3" fill="#8b5e3c"/>
+                    </svg>
+                    Herald's Journal
+                </h1>
+                <p>Last 100 messages are shown at the right. Server auto-refreshes the page every 3 seconds.</p>
+            </div>
+
+            <aside class="right logs-panel" aria-label="Recent logs">
+                <div class="panel-title"><span>Recent (up to 100)</span><span class="muted"></span></div>
+                <div class="logs-list">
+<!-- LOGS INSERTED SERVER-SIDE -->
+<!-- Example logs for preview (remove or replace when rendering) -->
+<div class="log"><span class="timestamp">2025-12-10 09:44:42</span>Sample log message — Herald is awake</div>
+<div class="log"><span class="timestamp">2025-12-10 09:43:14</span>Another entry — user said "hi"</div>
+<div class="log"><span class="timestamp">2025-12-10 09:42:00</span>AI: Replied with Victorian flourish</div>
+                </div>
+            </aside>
+        </div>
+
+        <footer>
+            <div>Herald • Victorian theme • subtle animated parchment</div>
+            <div class="refresh"><code>Auto-refresh: 3s</code></div>
+        </footer>
+    </div>
+</body>
+</html>
